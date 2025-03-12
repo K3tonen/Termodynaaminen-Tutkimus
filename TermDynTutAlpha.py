@@ -8,6 +8,7 @@ Created on Mon Mar 10 19:30:23 2025
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+#from scipy.optimize import curve_fit
 
 #Ladataan csv-tiedosto
 df = pd.read_csv("TermoPitLämKer.csv", delimiter=';')
@@ -18,14 +19,19 @@ jännite = df["Voltage (V) alpha"]
 
 
 #Lasketaan jännitteen nollataso ja uusi tasapainoasema
-kalib_alue = jännite[aika <= 100]
+kalib_alue = jännite[aika <= 140]
 nollataso = np.mean(kalib_alue)
+nolla_err = np.std(kalib_alue, ddof=1)
 
-tasap_alue = jännite[aika >= 450]
+tasap_alue = jännite[(aika >= 420) & (aika <= 485)]
 tasapaino = np.mean(tasap_alue)
+tasap_err = np.std(tasap_alue, ddof=1)
 
-kes_poik = np.std(jännite, ddof=1)
-print(kes_poik)
+deltaV = nollataso - tasapaino
+deltaV_err = np.sqrt(nolla_err**2 + tasap_err**2)
+
+print("Jännite-ero:")
+print(f"ΔV = {deltaV:.5f} ± {deltaV_err:.5f} V")
 
 #Plotataan data, nollataso ja tasapainoasema
 plt.scatter(aika, jännite, s=10, label="Jännite (V)")
@@ -34,8 +40,6 @@ plt.axhline(tasapaino, color='r', linestyle='--', linewidth=2, label=f'Tasapaino
 
 plt.xlim(100, 475)
 plt.ylim(-3.5, 2)
-
-plt.text(0.02, 0.98, f'Keskipoikkeama = {kes_poik:.5f} V', transform=plt.gca().transAxes, fontsize=13, verticalalignment='top')
 
 #Otsikot ja muotoilu
 plt.xlabel("Aika (s)")
